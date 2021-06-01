@@ -7,10 +7,9 @@ namespace Fish_Out_Of_Water
     [Menu("Fish Can Not Live Out Of Water")]
     public class Config : ConfigFile
     {
-        [Slider("Time fish lives out of water", 1, 1000, DefaultValue = 180, Step = 1, Format = "{0:F0}", Tooltip = "This is ingame, not real time seconds. 1 ingame second is 1 real time second at time scale 1")]
-        public int outOfWaterLiveTime = 180;
+        [Slider("Minutes fish live out of water", Min = 1, Max = 50, DefaultValue = 10, Step = 1, Format = "{0:F0}", Tooltip = "This is ingame, not real time minutes. 1 ingame minute is 1 real time minute at time scale 1")]
+        public int outOfWaterLifeTime = 10;
         //[Toggle("Logging")]
         //public bool logging = false;
-
     }
 }

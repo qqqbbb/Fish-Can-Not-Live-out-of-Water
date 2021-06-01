@@ -6,7 +6,7 @@ using System;
 using SMLHelper.V2.Handlers;
 using System.Collections.Generic;
 using UnityEngine;
-
+using static ErrorMessage;
 
 namespace Fish_Out_Of_Water
 {
@@ -22,19 +22,41 @@ namespace Fish_Out_Of_Water
             QModManager.Utility.Logger.Log(lvl, str);
         }
 
-        [HarmonyPatch(typeof(Player), "TrackTravelStats")]
+        public static void Setup()
+        {
+            Player.main.isUnderwaterForSwimming.changedEvent.AddHandler(Player.main, new UWE.Event<Utils.MonitoredValue<bool>>.HandleFunction(Fish_Out_Of_Water.OnPlayerIsUnderwaterForSwimmingChanged));
+            pda = Player.main.GetPDA();
+            Fish_Out_Of_Water.AddFishToList();
+        }
+
+        //[HarmonyPatch(typeof(Player), "TrackTravelStats")]
         class Player_TrackTravelStats_patch
         { // runs when game finished loading
             public static void Postfix(Player __instance)
             {
                 if (!gameLoaded)
                 {
-                    Player.main.isUnderwaterForSwimming.changedEvent.AddHandler(Player.main, new UWE.Event<Utils.MonitoredValue<bool>>.HandleFunction(Fish_Out_Of_Water.OnPlayerIsUnderwaterForSwimmingChanged));
-                    pda = Player.main.GetPDA();
-                    Fish_Out_Of_Water.AddFishToList();
+                    Setup();
                     gameLoaded = true;
                 }
                 //ErrorMessage.AddDebug(" TrackTravelStats ");
+            }
+        }
+
+        [HarmonyPatch(typeof(uGUI_SceneLoading), "End")]
+        internal class uGUI_SceneLoading_End_Patch
+        { // when loading savegame runs more than once
+            public static void Postfix(uGUI_SceneLoading __instance)
+            {
+                if (!uGUI.main.hud.active)
+                {
+                    //AddDebug(" Loading");
+                    return;
+                }
+                //if (!gameLoaded)
+                //{
+                //AddDebug(" Loaded !!!!!!!!!!!!!");
+                Setup();
             }
         }
 

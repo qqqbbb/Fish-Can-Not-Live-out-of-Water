@@ -4,6 +4,7 @@ using System;
 using UnityEngine;
 using System.Collections.Generic;
 using System.Collections;
+using static ErrorMessage;
 
 namespace Fish_Out_Of_Water
 {// not checking if exosuit picks up fish and leaves water
@@ -25,13 +26,13 @@ namespace Fish_Out_Of_Water
 
         public static void OnPlayerIsUnderwaterForSwimmingChanged(Utils.MonitoredValue<bool> isUnderwaterForSwimming)
         {
-            //ErrorMessage.AddDebug(" OnPlayerIsUnderwaterForSwimmingChanged " + Player.main.IsUnderwaterForSwimming());
+            //AddDebug(" OnPlayerIsUnderwaterForSwimmingChanged " + Player.main.IsUnderwaterForSwimming());
             AddFishToList();
         }
 
         private static void CheckFish(LiveMixin liveMixin)
         {
-            if (DayNightCycle.main.timePassedAsFloat - fishOutOfWater[liveMixin] > Main.config.outOfWaterLiveTime)
+            if (DayNightCycle.main.timePassedAsFloat - fishOutOfWater[liveMixin] > Main.config.outOfWaterLifeTime * 60f)
             {
                 fishOutOfWater.Remove(liveMixin);
                 KillFish(liveMixin);
@@ -83,7 +84,7 @@ namespace Fish_Out_Of_Water
         public static void AddFishToList(ItemsContainer container = null)
         {
             bool underWater = Player.main.IsUnderwaterForSwimming();
-            //ErrorMessage.AddDebug("run AddFishToList ");
+            //AddDebug("run AddFishToList ");
             if (container == null)
                 container = Inventory.main.container;
 
@@ -101,7 +102,7 @@ namespace Fish_Out_Of_Water
                         {
                             //ErrorMessage.AddDebug("remove fish " + liveMixin.gameObject.name);
                             //Main.Log("remove fish " + liveMixin.gameObject.name);
-                            if (DayNightCycle.main.timePassedAsFloat - fishOutOfWater[liveMixin] > Main.config.outOfWaterLiveTime)
+                            if (DayNightCycle.main.timePassedAsFloat - fishOutOfWater[liveMixin] > Main.config.outOfWaterLifeTime * 60f)
                                 KillFish(liveMixin);
 
                             fishOutOfWater.Remove(liveMixin);
@@ -159,8 +160,21 @@ namespace Fish_Out_Of_Water
             if (Inventory.main.usedStorage.Count > 0)
             {
                 IItemsContainer itemsContainer = Inventory.main.usedStorage[storageCount - 1];
+
                 if (itemsContainer is ItemsContainer)
-                    return (itemsContainer as ItemsContainer);
+                {
+                    ItemsContainer container = itemsContainer as ItemsContainer;
+                    GameObject parent = container.tr.parent.gameObject;
+                    //AddDebug(" parent " + parent.name);
+                    //Main.Log(" parent " + parent.name);
+                    //if (parent.GetComponentInChildren<Aquarium>())
+                    if (parent.name == "Aquarium(Clone)")
+                    {
+                        //AddDebug(container.tr.name + " Aquarium ");
+                        return null;
+                    }
+                    return container;
+                }
             }
             return null;
         }
