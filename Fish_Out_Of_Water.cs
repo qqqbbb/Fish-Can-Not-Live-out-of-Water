@@ -32,6 +32,9 @@ namespace Fish_Out_Of_Water
 
         private static void CheckFish(LiveMixin liveMixin)
         {
+            if (!fishOutOfWater.ContainsKey(liveMixin))
+                return;
+
             if (DayNightCycle.main.timePassedAsFloat - fishOutOfWater[liveMixin] > Main.config.outOfWaterLifeTime * 60f)
             {
                 fishOutOfWater.Remove(liveMixin);
@@ -55,6 +58,9 @@ namespace Fish_Out_Of_Water
             else if (liveMixin.broadcastKillOnDeath)
                 liveMixin.gameObject.BroadcastMessage("OnKill", SendMessageOptions.DontRequireReceiver);
 
+            AquariumFish af = liveMixin.GetComponent<AquariumFish>();
+            if (af)
+                UnityEngine.Object.Destroy(af);
             CreatureDeath creatureDeath = liveMixin.GetComponent<CreatureDeath>();
             Eatable eatable = liveMixin.GetComponent<Eatable>();
             eatable.SetDecomposes(true);
@@ -83,11 +89,17 @@ namespace Fish_Out_Of_Water
 
         public static void AddFishToList(ItemsContainer container = null)
         {
-            bool underWater = Player.main.IsUnderwaterForSwimming();
             //AddDebug("run AddFishToList ");
+            bool underWater = Player.main.IsUnderwaterForSwimming();
+            GameObject parent = null;
+            bool aquarium = false;
             if (container == null)
                 container = Inventory.main.container;
-
+            else
+            {
+                parent = container.tr.parent.gameObject;
+                aquarium = parent.name == "Aquarium(Clone)";
+            }
             foreach (InventoryItem item in container)
             {
                 //ErrorMessage.AddDebug("AddFishToList "+ item.item.gameObject.name);
@@ -96,6 +108,12 @@ namespace Fish_Out_Of_Water
 
                     LiveMixin liveMixin = item.item.GetComponent<LiveMixin>();
                     //Main.Log("AddFishToList " + liveMixin.gameObject.name);
+                    if (aquarium)
+                    {
+                        //AddDebug(container.tr.name + " Aquarium ");
+                        fishOutOfWater.Remove(liveMixin);
+                        continue;
+                    }
                     if (underWater)
                     {
                         if (fishOutOfWater.ContainsKey(liveMixin))
@@ -127,6 +145,10 @@ namespace Fish_Out_Of_Water
         private static void KillFishInContainer(ItemsContainer container)
         {
             //ErrorMessage.AddDebug("KillFishInContainer " );
+            GameObject parent = container.tr.parent.gameObject;
+            bool aquarium = parent.name == "Aquarium(Clone)";
+            AddFishToList(container);
+            AddFishToList();
             foreach (InventoryItem item in container)
             {
                 if (IsEatableFishAlive(item.item.gameObject))
@@ -134,6 +156,12 @@ namespace Fish_Out_Of_Water
                     LiveMixin liveMixin = item.item.GetComponent<LiveMixin>();
                     if (fishOutOfWater.ContainsKey(liveMixin))
                     {
+                        if (aquarium)
+                        {
+                            //AddDebug(container.tr.name + " Aquarium ");
+                            fishOutOfWater.Remove(liveMixin);
+                            continue;
+                        }
                         //ErrorMessage.AddDebug("fishOutOfWaterList " + item.item.GetTechType());
                         CheckFish(liveMixin);
                     }
@@ -164,15 +192,15 @@ namespace Fish_Out_Of_Water
                 if (itemsContainer is ItemsContainer)
                 {
                     ItemsContainer container = itemsContainer as ItemsContainer;
-                    GameObject parent = container.tr.parent.gameObject;
+                    // GameObject parent = container.tr.parent.gameObject;
                     //AddDebug(" parent " + parent.name);
                     //Main.Log(" parent " + parent.name);
                     //if (parent.GetComponentInChildren<Aquarium>())
-                    if (parent.name == "Aquarium(Clone)")
-                    {
+                    // if (parent.name == "Aquarium(Clone)")
+                    // {
                         //AddDebug(container.tr.name + " Aquarium ");
-                        return null;
-                    }
+                        // return null;
+                    // }
                     return container;
                 }
             }
@@ -204,6 +232,11 @@ namespace Fish_Out_Of_Water
                 LiveMixin liveMixin = __instance.GetComponent<LiveMixin>();
                 if (liveMixin && fishOutOfWater.ContainsKey(liveMixin))
                 {
+                    if (Player.main.IsUnderwater())
+                    {
+                        //AddDebug("reset time " + liveMixin.gameObject.name);
+                        fishOutOfWater.Remove(liveMixin);
+                    }
                     CheckFish(liveMixin);
                 }
             }
