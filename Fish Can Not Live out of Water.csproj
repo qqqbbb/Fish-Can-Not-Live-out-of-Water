@@ -68,7 +68,7 @@
     <Compile Include="Main.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Fish_Out_Of_Water.cs" />
+    <Compile Include="Patches.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Config.cs" />
