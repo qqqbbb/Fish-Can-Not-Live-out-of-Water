@@ -1,25 +1,25 @@
 ﻿
 using HarmonyLib;
-using QModManager.API.ModLoading;
-using System.Reflection;
 using System;
 using SMLHelper.V2.Handlers;
 using System.Collections.Generic;
 using UnityEngine;
 using static ErrorMessage;
+using BepInEx;
 
 namespace Fish_Out_Of_Water
 {
-    [QModCore]
-    public class Main
+    [BepInPlugin(GUID, MODNAME, VERSION)]
+    //[BepInDependency("com.bepinex.plugin.important")]
+    public class Main : BaseUnityPlugin
     {
-        internal static Config config { get; } = OptionsPanelHandler.RegisterModOptions<Config>();
-        //public static PDA pda;
+        private const string
+            MODNAME = "Fish can not live out of water",
+            GUID = "qqqbbb.subnautica.fishOutOfWater",
+            VERSION = "2.1";
 
-        public static void Log(string str, QModManager.Utility.Logger.Level lvl = QModManager.Utility.Logger.Level.Info)
-        {
-            QModManager.Utility.Logger.Log(lvl, str);
-        }
+        internal static Config config { get; } = OptionsPanelHandler.RegisterModOptions<Config>();
+
 
         public static void Setup()
         {
@@ -46,7 +46,9 @@ namespace Fish_Out_Of_Water
         {
             public static void Postfix(IngameMenu __instance, bool quitToDesktop)
             {
-                //ErrorMessage.AddDebug("QuitGameAsync " + quitToDesktop);
+                //AddDebug("QuitGameAsync " + quitToDesktop);
+                //BepInEx.Logging.Logger.CreateLogSource("IngameMenu_QuitGameAsync_Patch").Log(BepInEx.Logging.LogLevel.Error, "QuitGameAsync" + quitToDesktop);
+
                 if (!quitToDesktop)
                 {
                     Fish_Out_Of_Water.fishOutOfWater = new Dictionary<LiveMixin, float>();
@@ -55,13 +57,14 @@ namespace Fish_Out_Of_Water
             }
         }
 
-        [QModPatch]
-        public static void Load()
+        private void Start()
         {
-
-            config.Load();
-            Assembly assembly = Assembly.GetExecutingAssembly();
-            new Harmony($"qqqbbb_{assembly.GetName().Name}").PatchAll(assembly);
+            //AddDebug("Mono Start ");
+            //Logger.LogInfo("Mono Start");
+            //config.Load();
+            Harmony harmony = new Harmony(GUID);
+            harmony.PatchAll();
         }
+
     }
 }

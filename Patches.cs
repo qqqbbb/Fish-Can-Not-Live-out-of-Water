@@ -9,11 +9,10 @@ namespace Fish_Out_Of_Water
 {
     class Fish_Out_Of_Water
     {
-        private const float seconds = 60f;
+        private const float seconds = 10f;
         public static Dictionary<LiveMixin, float> fishOutOfWater = new Dictionary<LiveMixin, float>();
         public static Dictionary<LiveMixin, float> fishInInventory = new Dictionary<LiveMixin, float>();
-
-        public static bool IsEatableFish(GameObject go)
+        static bool IsEatableFish(GameObject go)
         {
             Creature creature = go.GetComponent<Creature>();
             Eatable eatable = go.GetComponent<Eatable>();
@@ -21,13 +20,13 @@ namespace Fish_Out_Of_Water
             return creature && eatable && liveMixin;
         }
 
-        public static void OnPlayerIsUnderwaterForSwimmingChanged(Utils.MonitoredValue<bool> isUnderwaterForSwimming)
+        static void OnPlayerIsUnderwaterForSwimmingChanged(Utils.MonitoredValue<bool> isUnderwaterForSwimming)
         {
             //AddDebug(" OnPlayerIsUnderwaterForSwimmingChanged " + Player.main.IsUnderwaterForSwimming());
             //AddFishToList();
         }
 
-        private static void CheckFishInContainer(ItemsContainer container)
+        static void CheckFishInContainer(ItemsContainer container)
         {
             if (container == null)
                 return;
@@ -54,7 +53,7 @@ namespace Fish_Out_Of_Water
             }
         }
 
-        private static void CheckFishInInventory()
+        static void CheckFishInInventory()
         {
             if (Player.main.inExosuit)
             {
@@ -68,7 +67,7 @@ namespace Fish_Out_Of_Water
                 CheckFishInContainer(Inventory.main.container);
         }
 
-        private static void CheckFish()
+        static void CheckFish()
         {
             if (fishOutOfWater.Count == 0)
                 return;
@@ -121,9 +120,20 @@ namespace Fish_Out_Of_Water
             }
             liveMixin.gameObject.EnsureComponent<EcoTarget>().SetTargetType(EcoTargetType.DeadMeat);
 
-            PlayerTool playerTool = Inventory.main.GetHeldTool();
-            if (playerTool && playerTool.gameObject.Equals(liveMixin.gameObject))
-                Inventory.main.quickSlots.DeselectImmediate(); // prevent bug: equipped fish moving down
+
+            foreach (InventoryItem inventoryItem in Inventory.main.container)
+            {
+                Pickupable pickupable = inventoryItem.item;
+                if (pickupable != null && pickupable.gameObject.Equals(liveMixin.gameObject))
+                { // fix bug: food decay bar gets offset
+                    Inventory.main.container.RemoveItem(pickupable);
+                    Inventory.main.container.AddItem(pickupable);
+                    break;
+                }
+            }
+            //PlayerTool playerTool = Inventory.main.GetHeldTool();
+            //if (playerTool && playerTool.gameObject.Equals(liveMixin.gameObject))
+            //    Inventory.main.quickSlots.DeselectImmediate();
         }
 
         [HarmonyPatch(typeof(Pickupable))]
@@ -211,7 +221,7 @@ namespace Fish_Out_Of_Water
             public static void Postfix(ItemsContainer __instance, InventoryItem item)
             {
                 if (Player.main.IsUnderwaterForSwimming() || item.item == null || __instance.Equals(Inventory.main.container))
-                    return;
+                return;
 
                 GameObject go = item.item.gameObject;
                 if (IsEatableFish(go))
@@ -238,12 +248,19 @@ namespace Fish_Out_Of_Water
         }
 
         [HarmonyPatch(typeof(Player), "TrackTravelStats")]
+        //[HarmonyPatch(typeof(Player), "TrackSurvivalStats")]
         class Player_TrackTravelStats_Patch
         {
             public static void Postfix(Player __instance)
             {
-                if (uGUI.isLoading)
-                    return;
+                //if (uGUI.isLoading)
+                //    return;
+                //if (!uGUI.main.hud.active)
+                //{
+                //    AddDebug(" Loading");
+                //    return;
+                //}
+                //AddDebug("TrackTravelStats ");
                 //AddDebug("IsUnderwaterForSwimming " + Player.main.IsUnderwaterForSwimming());
                 //AddDebug("IsUnderwater " + Player.main.IsUnderwater());
                 CheckFish();
