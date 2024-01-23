@@ -15,7 +15,7 @@ namespace Fish_Out_Of_Water
         private const string
             MODNAME = "Fish can not live out of water",
             GUID = "qqqbbb.subnautica.fishOutOfWater",
-            VERSION = "3.0.0";
+            VERSION = "3.0.01";
 
         public static Config config { get; } = OptionsPanelHandler.RegisterModOptions<Config>();
 

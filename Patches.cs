@@ -9,9 +9,10 @@ namespace Fish_Out_Of_Water
 {
     class Fish_Out_Of_Water
     {
-        private const float seconds = 10f;
+        private const float seconds = 60f;
         public static Dictionary<LiveMixin, float> fishOutOfWater = new Dictionary<LiveMixin, float>();
         public static Dictionary<LiveMixin, float> fishInInventory = new Dictionary<LiveMixin, float>();
+
         static bool IsEatableFish(GameObject go)
         {
             Creature creature = go.GetComponent<Creature>();
@@ -63,7 +64,8 @@ namespace Fish_Out_Of_Water
         {
             if (Player.main.inExosuit)
             {
-                Exosuit exosuit = Player.main.GetComponentInParent<Exosuit>();
+                //Exosuit exosuit = Player.main.GetComponentInParent<Exosuit>();
+                Exosuit exosuit = Player.main.currentMountedVehicle as Exosuit;
                 if (exosuit && !exosuit.IsUnderwater() && exosuit.storageContainer)
                     CheckFishInContainer(exosuit.storageContainer.container);
             }
@@ -83,6 +85,9 @@ namespace Fish_Out_Of_Water
             foreach (KeyValuePair<LiveMixin, float> pair in fishOutOfWater)
             {
                 LiveMixin liveMixin = pair.Key;
+                if (liveMixin == null)
+                    continue;
+
                 float timeOutOfWater = DayNightCycle.main.timePassedAsFloat - fishOutOfWater[liveMixin];
                 //AddDebug("CheckFish " + liveMixin.gameObject.name + " timeOutOfWater " + timeOutOfWater);
                 if (timeOutOfWater > Main.config.outOfWaterLifeTime * seconds)
