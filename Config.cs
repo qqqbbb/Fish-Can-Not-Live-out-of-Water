@@ -1,5 +1,11 @@
-﻿using SMLHelper.V2.Json;
-using SMLHelper.V2.Options.Attributes;
+﻿using Nautilus.Json;
+using Nautilus.Options.Attributes;
+using System.Collections.Generic;
+using UnityEngine;
+using Nautilus.Commands;
+using Nautilus.Handlers;
+using Nautilus.Options;
+using System.ComponentModel;
 
 
 namespace Fish_Out_Of_Water

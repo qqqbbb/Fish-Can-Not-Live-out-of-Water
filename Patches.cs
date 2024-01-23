@@ -15,9 +15,12 @@ namespace Fish_Out_Of_Water
         static bool IsEatableFish(GameObject go)
         {
             Creature creature = go.GetComponent<Creature>();
+            if (creature == null) return false;
             Eatable eatable = go.GetComponent<Eatable>();
+            if (eatable == null) return false;
             LiveMixin liveMixin = go.GetComponent<LiveMixin>();
-            return creature && eatable && liveMixin;
+            if (liveMixin == null) return false;
+            else return true;
         }
 
         static void OnPlayerIsUnderwaterForSwimmingChanged(Utils.MonitoredValue<bool> isUnderwaterForSwimming)
@@ -31,6 +34,7 @@ namespace Fish_Out_Of_Water
             if (container == null)
                 return;
 
+            List<LiveMixin> fishToKill = new List<LiveMixin>();
             foreach (InventoryItem item in container)
             {
                 //AddDebug("CheckFishInInventory "+ item.item.gameObject.name);
@@ -45,12 +49,14 @@ namespace Fish_Out_Of_Water
                     {
                         float timeOutOfWater = DayNightCycle.main.timePassedAsFloat - fishInInventory[liveMixin];
                         if (timeOutOfWater > Main.config.outOfWaterLifeTime * seconds)
-                            KillFish(liveMixin);
+                            fishToKill.Add(liveMixin);
                     }
                     else
                         fishInInventory.Add(liveMixin, DayNightCycle.main.timePassedAsFloat);
                 }
             }
+            foreach (LiveMixin lm in fishToKill)
+                KillFish(lm);
         }
 
         static void CheckFishInInventory()
@@ -107,6 +113,7 @@ namespace Fish_Out_Of_Water
             Eatable eatable = liveMixin.GetComponent<Eatable>();
             eatable.SetDecomposes(true);
             Rigidbody rb = liveMixin.GetComponent<Rigidbody>();
+            Pickupable killedFish = null;
             if (rb)
             {
                 rb.isKinematic = false;
@@ -120,16 +127,19 @@ namespace Fish_Out_Of_Water
             }
             liveMixin.gameObject.EnsureComponent<EcoTarget>().SetTargetType(EcoTargetType.DeadMeat);
 
-
             foreach (InventoryItem inventoryItem in Inventory.main.container)
             {
                 Pickupable pickupable = inventoryItem.item;
-                if (pickupable != null && pickupable.gameObject.Equals(liveMixin.gameObject))
-                { // fix bug: food decay bar gets offset
-                    Inventory.main.container.RemoveItem(pickupable);
-                    Inventory.main.container.AddItem(pickupable);
+                if (pickupable != null && pickupable.gameObject == liveMixin.gameObject)
+                { 
+                    killedFish = pickupable;
                     break;
                 }
+            }
+            if (killedFish)
+            {// fix bug: food decay bar gets offset
+                Inventory.main.container.RemoveItem(killedFish);
+                Inventory.main.container.AddItem(killedFish);
             }
             //PlayerTool playerTool = Inventory.main.GetHeldTool();
             //if (playerTool && playerTool.gameObject.Equals(liveMixin.gameObject))
@@ -220,8 +230,8 @@ namespace Fish_Out_Of_Water
         {
             public static void Postfix(ItemsContainer __instance, InventoryItem item)
             {
-                if (Player.main.IsUnderwaterForSwimming() || item.item == null || __instance.Equals(Inventory.main.container))
-                return;
+                if (Player.main.IsUnderwaterForSwimming() || item.item == null || __instance == Inventory.main.container)
+                    return;
 
                 GameObject go = item.item.gameObject;
                 if (IsEatableFish(go))

@@ -1,25 +1,23 @@
 ﻿
 using HarmonyLib;
 using System;
-using SMLHelper.V2.Handlers;
 using System.Collections.Generic;
 using UnityEngine;
 using static ErrorMessage;
 using BepInEx;
+using Nautilus.Handlers;
 
 namespace Fish_Out_Of_Water
 {
     [BepInPlugin(GUID, MODNAME, VERSION)]
-    //[BepInDependency("com.bepinex.plugin.important")]
     public class Main : BaseUnityPlugin
     {
         private const string
             MODNAME = "Fish can not live out of water",
             GUID = "qqqbbb.subnautica.fishOutOfWater",
-            VERSION = "2.1";
+            VERSION = "3.0.0";
 
-        internal static Config config { get; } = OptionsPanelHandler.RegisterModOptions<Config>();
-
+        public static Config config { get; } = OptionsPanelHandler.RegisterModOptions<Config>();
 
         public static void Setup()
         {
